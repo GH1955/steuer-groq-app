@@ -4,6 +4,10 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
+
+
+app = Flask(__name__)
+
 @app.get('/health')
 def health():
     return jsonify({
@@ -11,9 +15,7 @@ def health():
         'groq_key_present': bool(os.environ.get('GROQ_API_KEY')),
         'space_instructions_present': bool(os.environ.get('SPACE_INSTRUCTIONS'))
     })
-
-app = Flask(__name__)
-
+    
 DEFAULT_SYSTEM_PROMPT = """Du bist eine Steuerapp für österreichische Steuerfragen."""
 def get_system_prompt() -> str:
     return os.environ.get("SPACE_INSTRUCTIONS", DEFAULT_SYSTEM_PROMPT)

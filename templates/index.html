@@ -22,54 +22,87 @@
             <path d="M10 13.5h4"/>
           </svg>
         </div>
-        <div>
-          <div class="eyebrow">Flask · Groq · Railway</div>
+        <div class="brand-text">
+          <span class="stack-label">FLASK · GROQ · RAILWAY</span>
           <h1>Steuer-Assistenz Österreich</h1>
         </div>
       </div>
-
-      <p class="intro">Eine eigene Chat-Oberfläche für Fragen zu Steuern in Österreich — ohne Spaces-UI, mit ruhiger Optik und direkter Frage-Antwort-Ansicht.</p>
-
-      <div class="panel">
-        <h2>Beispielfragen</h2>
-        <div class="examples">
-          <button class="example-btn" data-question="Welche Werbungskosten können Arbeitnehmer in Österreich typischerweise absetzen?">Werbungskosten</button>
-          <button class="example-btn" data-question="Wie funktioniert die Kleinunternehmerregelung in Österreich?">Kleinunternehmer</button>
-          <button class="example-btn" data-question="Was ist bei Einkünften aus Vermietung in Österreich steuerlich wichtig?">Vermietung</button>
-        </div>
-      </div>
-
-      <div class="panel small-panel">
+      <p class="tagline">Eine eigene Chat-Oberfläche für Fragen zu Steuern in Österreich — ohne Spaces-UI, mit ruhiger Optik und direkter Frage-Antwort-Ansicht.</p>
+      <div class="panel notice">
         <strong>Hinweis</strong>
         <p>Die Antworten sind eine allgemeine Orientierung und ersetzen keine individuelle Steuerberatung.</p>
       </div>
     </aside>
-
-    <main class="chat card" id="main">
-      <header class="chat-header">
-        <div>
-          <div class="chat-title">Fragen eingeben</div>
-          <div class="chat-subtitle">Antworten erscheinen direkt in dieser Oberfläche.</div>
+    <main id="main" class="main-col">
+      <section class="chat-section card">
+        <h2>Fragen eingeben</h2>
+        <p class="sub">Antworten erscheinen direkt in dieser Oberfläche.</p>
+        <div id="output" class="output" aria-live="polite" aria-atomic="false">
+          <div class="bubble assistant-bubble">
+            <span class="bubble-label">ASSISTENZ</span>
+            <div class="bubble-text">Willkommen. Stelle eine Frage zu Steuern in Österreich, und ich antworte hier direkt in dieser Oberfläche.</div>
+          </div>
         </div>
-      </header>
-
-      <section class="messages" id="messages" aria-live="polite">
-        <article class="message assistant">
-          <div class="message-role">Assistenz</div>
-          <div class="message-body">Willkommen. Stelle eine Frage zu Steuern in Österreich, und ich antworte hier direkt in dieser Oberfläche.</div>
-        </article>
+        <form id="chat-form" autocomplete="off">
+          <textarea id="question" name="question" rows="3" placeholder="Zum Beispiel: Muss ich eine Arbeitnehmerveranlagung in Österreich machen?" required></textarea>
+          <button type="submit" id="submit-btn">Frage senden</button>
+        </form>
       </section>
-
-      <form id="chatForm" class="composer">
-        <label for="question" class="sr-only">Frage</label>
-        <textarea id="question" name="question" placeholder="Zum Beispiel: Muss ich eine Arbeitnehmerveranlagung in Österreich machen?"></textarea>
-        <div class="composer-actions">
-          <div class="status" id="status">Bereit</div>
-          <button type="submit" id="sendBtn">Frage senden</button>
-        </div>
-      </form>
     </main>
   </div>
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    const form = document.getElementById('chat-form');
+    const output = document.getElementById('output');
+    const questionInput = document.getElementById('question');
+    const submitBtn = document.getElementById('submit-btn');
+    let history = [];
+
+    function addBubble(role, text) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + (role === 'user' ? 'user-bubble' : 'assistant-bubble');
+      const label = document.createElement('span');
+      label.className = 'bubble-label';
+      label.textContent = role === 'user' ? 'SIE' : 'ASSISTENZ';
+      const content = document.createElement('div');
+      content.className = 'bubble-text';
+      content.textContent = text;
+      bubble.appendChild(label);
+      bubble.appendChild(content);
+      output.appendChild(bubble);
+      bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      return content;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const question = questionInput.value.trim();
+      if (!question) return;
+      addBubble('user', question);
+      history.push({ role: 'user', content: question });
+      questionInput.value = '';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Wird gesendet…';
+      const thinkingContent = addBubble('assistant', 'Einen Moment…');
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, history })
+        });
+        const data = await res.json();
+        if (data.error) {
+          thinkingContent.textContent = 'Es gab ein Problem beim Laden der Antwort: ' + data.error;
+        } else {
+          thinkingContent.textContent = data.answer;
+          history.push({ role: 'assistant', content: data.answer });
+        }
+      } catch (err) {
+        thinkingContent.textContent = 'Netzwerkfehler: ' + err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Frage senden';
+      }
+    });
+  </script>
 </body>
 </html>

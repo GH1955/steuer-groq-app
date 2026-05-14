@@ -80,7 +80,7 @@ def chat():
         findok_results = search_findok(question)
         web_results = search_general_web(question)
         context = f"--- Findok-Suchergebnisse ---\n{findok_results}\n\n--- Web-Suchergebnisse ---\n{web_results}"
-        messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
+        messages = [{'role': 'system', 'content': get_system_prompt()}]
         for item in history[-8:]:
             role = item.get('role')
             content = item.get('content', '')

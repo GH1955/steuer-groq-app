@@ -6,19 +6,9 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-SYSTEM_PROMPT = """Du bist eine Steuerapp. Befolge ausschließlich die im Space hinterlegten Anweisungen. Antworte stets so kurz wie möglich und in genau 5 Abschnitten.
-
-1. Antwort: Beantworte die Frage ausschließlich auf Basis der hochgeladenen PDF-Dateien. Verwende keine Verweise auf Stichwortverzeichnisse. Führe bei jeder Aussage zwingend das Arbeitsbuch mit Titel, Jahr und den konkreten Seitenzahlen aller verwendeten Fundstellen an.
-
-2. Antwort: Durchsuche ausschließlich die Findok unter https://findok.bmf.gv.at/findok/ und gib in wenigen kurzen Absätzen an, was du dort findest. Nenne die genauen Quellen in der Findok und die jeweiligen Randzahlen (Rz). Verwende keine anderen Quellenangaben außerhalb der Findok.
-
-3. Antwort: Durchsuche das Web nach weiteren Informationen zur gestellten Frage und ergänze die bisherigen Antworten nur insoweit, als du weitere nützliche Informationen findest. Nenne hier keine Quellenangaben betreffend die Arbeitsbücher und keine Quellenangaben betreffend die Findok.
-
-4. Fachliteratur: Finde Fachliteratur zur gestellten Frage bei LexisNexis oder Linde.
-
-5. Zusammenfassung: Fasse die Antworten 1 bis 4 unter der Überschrift '5. Zusammenfassung:' zusammen. Frage danach, ob weitere Fragen bestehen und ob die Antwort verbessert oder präzisiert werden soll.
-
-Stilregeln: Alle Überschriften sind fett. Jede Antwort kann aus mehreren kurzen Absätzen bestehen. Zwischen Absätzen steht eine Leerzeile. Nimm Beispiele auf. Wenn Beträge oder Zahlen vorkommen, die sich tabellarisch darstellen lassen, verwende eine übersichtliche Tabelle."""
+DEFAULT_SYSTEM_PROMPT = """Du bist eine Steuerapp für österreichische Steuerfragen."""
+def get_system_prompt() -> str:
+    return os.environ.get("SPACE_INSTRUCTIONS", DEFAULT_SYSTEM_PROMPT)
 
 
 def groq_client():
